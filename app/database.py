@@ -1,37 +1,36 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Cargamos las variables del archivo .env
-load_dotenv()
+# Buscamos la ruta absoluta de la carpeta raíz del proyecto (subiendo un nivel desde 'app')
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-# Extraemos las credenciales de forma segura
+# Extraemos las credenciales asegurándonos de que ya no sean None
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")
 DB_NAME = os.getenv("DB_NAME")
 
-# Construimos la URL de conexión dinámicamente
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://{}:{}@{}:{}/{}".format(
     DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME
 )
-# Creamos el motor de la base de datos
+
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
-
-# Sesiones
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base para los modelos
 Base = declarative_base()
 
 
-# Dependencia para obtener la sesión en cada petición
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+
+
